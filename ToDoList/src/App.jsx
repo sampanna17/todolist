@@ -9,8 +9,9 @@ function App() {
     const [allToDos, setToDos] = useState([]);
     const [newTitle, setNewTitle] = useState("");
     const [newDescription, setNewDescription] = useState("");
+    const [CompletedToDos, setCompletedToDos] = useState([]);
 
-    const handleAddToDo = ()=>{
+    const handleAddToDo = () => {
         let newToDoItem = {
             title: newTitle,
             description: newDescription,
@@ -19,16 +20,58 @@ function App() {
         let updatedToDoArray = [...allToDos];
         updatedToDoArray.push(newToDoItem);
         setToDos(updatedToDoArray);
-        localStorage.setItem('todolist',JSON.stringify(updatedToDoArray));
-
+        localStorage.setItem('todolist', JSON.stringify(updatedToDoArray));
     };
 
-    useEffect(()=>{
-        let savedToDo = JSON.parse(localStorage.getItem('todolist'))
-        if(savedToDo){
+    const handleDelete = (index) => {
+        let reducedToDO = [...allToDos];
+        reducedToDO.splice(index, 1);
+        localStorage.setItem('todolist', JSON.stringify(reducedToDO));
+        setToDos(reducedToDO);
+    };
+
+    const handleComplete = (index) => {
+        let now = new Date();
+        let day = now.getDate();
+        let month = now.getMonth() + 1;
+        let year = now.getFullYear();
+        let hour = now.getHours();
+        let min = now.getMinutes();
+        let sec = now.getSeconds();
+        let completedOn = day + '-' + month + "-" + year + " " + "at " + hour + ":" + min + ":" + sec;
+
+        let filteredItem = {
+            ...allToDos[index],
+            completedOn: completedOn
+        }
+
+        let updatedCompletedArray = [...CompletedToDos];
+        updatedCompletedArray.push(filteredItem);
+        setCompletedToDos(updatedCompletedArray);
+        handleDelete(index)
+        localStorage.setItem('completedToDos', JSON.stringify(updatedCompletedArray));
+    };
+
+    const handleDeleteCompleted = (index) => {
+        let reducedCompleted = [...CompletedToDos];
+        reducedCompleted.splice(index, 1);
+        localStorage.setItem('completedToDos', JSON.stringify(reducedCompleted));
+        setCompletedToDos(reducedCompleted);
+    };
+
+
+    useEffect(() => {
+        let savedToDo = JSON.parse(localStorage.getItem('todolist'));
+        let savedCompleted = JSON.parse(localStorage.getItem('completedToDos'));
+
+        if (savedToDo) {
             setToDos(savedToDo);
         }
-    },[])
+
+        if (savedCompleted) {
+            setCompletedToDos(savedCompleted);
+        }
+    }, []);
 
     return (
         <div className="App">
@@ -68,7 +111,7 @@ function App() {
                 </div>
 
                 <div className="todo-list">
-                    {allToDos.map((item, index) => {
+                    {isCompleteScreen === false && allToDos.map((item, index) => {
                         return (
                             <div className="todo-list-item" key={index}>
                                 <div className="list-item">
@@ -77,9 +120,25 @@ function App() {
                                 </div>
 
                                 <div>
-                                    <MdDelete className="icon" />
-                                    <FaCheck className="check-icon" />
-                                    <FaEdit className="edit-icon" />
+                                    <MdDelete className="icon" onClick={() => handleDelete(index)} title="Delete?" />
+                                    <FaCheck className="check-icon" onClick={() => handleComplete(index)} title="Complete?" />
+                                    <FaEdit className="edit-icon" title="Edit?" />
+                                </div>
+                            </div>
+                        );
+                    })}
+
+                    {isCompleteScreen === true && CompletedToDos.map((item, index) => {
+                        return (
+                            <div className="todo-list-item" key={index}>
+                                <div className="list-item">
+                                    <h3>{item.title}</h3>
+                                    <p>{item.description}</p>
+                                    <p><small>Completed on: {item.completedOn}</small></p>
+                                </div>
+
+                                <div>
+                                    <MdDelete className="icon" onClick={() => handleDeleteCompleted(index)} title="Delete?" />
                                 </div>
                             </div>
                         );
