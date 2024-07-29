@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { MdDelete } from "react-icons/md";
 import { FaCheck } from "react-icons/fa";
 import { FaEdit } from "react-icons/fa";
@@ -10,6 +10,8 @@ function App() {
     const [newTitle, setNewTitle] = useState("");
     const [newDescription, setNewDescription] = useState("");
     const [CompletedToDos, setCompletedToDos] = useState([]);
+    const [currentEdit, setCurrentEdit] = useState("");
+    const [currentEditedItem, setCurrentEditedItem] = useState("");
 
     const handleAddToDo = () => {
         let newToDoItem = {
@@ -59,7 +61,35 @@ function App() {
         setCompletedToDos(reducedCompleted);
     };
 
+    const handleEdit = (index, item) => {
+        setCurrentEdit(index);
+        setCurrentEditedItem(item);
+    }
 
+    const handleUpdateTitle = (value) => {
+        setCurrentEditedItem((prev) => {
+            return { ...prev, title: value };
+        });
+    };
+    
+    const handleUpdateDescription = (value) => {
+        setCurrentEditedItem((prev) => {
+            return { ...prev, description: value };
+        });
+    };
+    
+    const handleUpdateToDo = () => {
+        let newToDo = [...allToDos];
+        newToDo[currentEdit] = currentEditedItem;
+        setToDos(newToDo);
+        setCurrentEdit("");
+    };
+
+    // Save todos to local storage whenever allToDos changes
+    useEffect(() => {
+        localStorage.setItem('allToDos', JSON.stringify(allToDos));
+    }, [allToDos]);
+    
     useEffect(() => {
         let savedToDo = JSON.parse(localStorage.getItem('todolist'));
         let savedCompleted = JSON.parse(localStorage.getItem('completedToDos'));
@@ -112,20 +142,42 @@ function App() {
 
                 <div className="todo-list">
                     {isCompleteScreen === false && allToDos.map((item, index) => {
-                        return (
-                            <div className="todo-list-item" key={index}>
-                                <div className="list-item">
-                                    <h3>{item.title}</h3>
-                                    <p>{item.description}</p>
+                        if (currentEdit === index) {
+                            return (
+                                <div key={index} className="edit-wrapper">
+                                    <input
+                                        placeholder="Updated Title"
+                                        onChange={(e) => handleUpdateTitle(e.target.value)}
+                                        value={currentEditedItem.title}
+                                    />
+                                    <textarea
+                                        placeholder="Updated Description"
+                                        rows={4}
+                                        onChange={(e) => handleUpdateDescription(e.target.value)}
+                                        value={currentEditedItem.description}
+                                    />
+                                    <button type="buttton" onClick={handleUpdateToDo} className="UpdateBtn">
+                                        Update
+                                    </button>
                                 </div>
+                            );
 
-                                <div>
-                                    <MdDelete className="icon" onClick={() => handleDelete(index)} title="Delete?" />
-                                    <FaCheck className="check-icon" onClick={() => handleComplete(index)} title="Complete?" />
-                                    <FaEdit className="edit-icon" title="Edit?" />
+                        } else {
+                            return (
+                                <div className="todo-list-item" key={index}>
+                                    <div className="list-item">
+                                        <h3>{item.title}</h3>
+                                        <p>{item.description}</p>
+                                    </div>
+
+                                    <div>
+                                        <MdDelete className="icon" onClick={() => handleDelete(index)} title="Delete?" />
+                                        <FaCheck className="check-icon" onClick={() => handleComplete(index)} title="Complete?" />
+                                        <FaEdit className="edit-icon" onClick={() => handleEdit(index, item)} title="Edit?" />
+                                    </div>
                                 </div>
-                            </div>
-                        );
+                            );
+                        }
                     })}
 
                     {isCompleteScreen === true && CompletedToDos.map((item, index) => {
