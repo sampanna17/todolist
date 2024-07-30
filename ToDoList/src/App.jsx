@@ -83,7 +83,7 @@ function App() {
         newToDo[currentEdit] = currentEditedItem;
         setToDos(newToDo);
         setCurrentEdit("");
-        // localStorage.setItem('newToDo', JSON.stringify(allToDos));
+        localStorage.setItem('todolist', JSON.stringify(newToDo));
     };
 
     useEffect(() => {
